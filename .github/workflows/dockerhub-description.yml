@@ -1,0 +1,23 @@
+name: Update Docker Hub Description
+on:
+  push:
+    branches:
+      - ashahba/dockerhub-description
+    paths:
+      - .github/workflows/dockerhub-description.yml
+      - AudioQnA/README.md
+jobs:
+  dockerHubDescription:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Docker Hub Description
+      uses: peter-evans/dockerhub-description@v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        repository: ashahba/audioqna
+        short-description: "The docker image served as a chatqna gateway and using language modeling to generate answers to user queries by converting audio input to text, and then using text-to-speech (TTS) to convert those answers back to speech for interaction."
+        readme-filepath: AudioQnA/README.md
+        enable-url-completion: true
