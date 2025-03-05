@@ -11,12 +11,14 @@ services:
       - "6379:6379"
       - "8001:8001"
   dataprep-redis-service:
-    image: ${REGISTRY:-opea}/dataprep-redis:${TAG:-latest}
+    image: ${REGISTRY:-opea}/dataprep:${TAG:-latest}
     container_name: dataprep-redis-server
+    # volumes:
+    #   - $WORKDIR/GenAIExamples/DocIndexRetriever/docker_image_build/GenAIComps/comps:/home/user/comps
     depends_on:
       - redis-vector-db
     ports:
-      - "6007:6007"
+      - "6007:5000"
       - "6008:6008"
       - "6009:6009"
     environment:
@@ -36,7 +38,7 @@ services:
     ports:
       - "6006:80"
     volumes:
-      - "./data:/data"
+      - "${MODEL_CACHE}:/data"
     shm_size: 1g
     environment:
       no_proxy: ${no_proxy}
@@ -52,6 +54,8 @@ services:
   embedding:
     image: ${REGISTRY:-opea}/embedding:${TAG:-latest}
     container_name: embedding-server
+    # volumes:
+    #   - $WORKDIR/GenAIExamples/DocIndexRetriever/docker_image_build/GenAIComps/comps:/home/comps
     ports:
       - "6000:6000"
     ipc: host
@@ -67,7 +71,7 @@ services:
       LOGFLAG: ${LOGFLAG}
     restart: unless-stopped
   retriever:
-    image: ${REGISTRY:-opea}/retriever-redis:${TAG:-latest}
+    image: ${REGISTRY:-opea}/retriever:${TAG:-latest}
     container_name: retriever-redis-server
     depends_on:
       - redis-vector-db
@@ -83,6 +87,7 @@ services:
       HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
       TEI_EMBEDDING_ENDPOINT: ${TEI_EMBEDDING_ENDPOINT}
       LOGFLAG: ${LOGFLAG}
+      RETRIEVER_COMPONENT_NAME: "OPEA_RETRIEVER_REDIS"
     restart: unless-stopped
   tei-reranking-service:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
@@ -91,7 +96,7 @@ services:
     ports:
       - "8808:80"
     volumes:
-      - "./data:/data"
+      - "${MODEL_CACHE}:/data"
     shm_size: 1g
     environment:
       no_proxy: ${no_proxy}
@@ -109,6 +114,8 @@ services:
   reranking:
     image: ${REGISTRY:-opea}/reranking:${TAG:-latest}
     container_name: reranking-tei-xeon-server
+    # volumes:
+    #   - $WORKDIR/GenAIExamples/DocIndexRetriever/docker_image_build/GenAIComps/comps:/home/user/comps
     depends_on:
       tei-reranking-service:
         condition: service_healthy

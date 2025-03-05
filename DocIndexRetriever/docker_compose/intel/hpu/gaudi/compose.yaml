@@ -12,13 +12,13 @@ services:
       - "6379:6379"
       - "8001:8001"
   dataprep-redis-service:
-    image: ${REGISTRY:-opea}/dataprep-redis:${TAG:-latest}
+    image: ${REGISTRY:-opea}/dataprep:${TAG:-latest}
     container_name: dataprep-redis-server
     depends_on:
       - redis-vector-db
       - tei-embedding-service
     ports:
-      - "6007:6007"
+      - "6007:5000"
     environment:
       no_proxy: ${no_proxy}
       http_proxy: ${http_proxy}
@@ -34,7 +34,7 @@ services:
     ports:
       - "8090:80"
     volumes:
-      - "./data:/data"
+      - "${MODEL_CACHE}:/data"
     runtime: habana
     cap_add:
       - SYS_NICE
@@ -72,7 +72,7 @@ services:
       LOGFLAG: ${LOGFLAG}
     restart: unless-stopped
   retriever:
-    image: ${REGISTRY:-opea}/retriever-redis:${TAG:-latest}
+    image: ${REGISTRY:-opea}/retriever:${TAG:-latest}
     container_name: retriever-redis-server
     depends_on:
       - redis-vector-db
@@ -86,6 +86,7 @@ services:
       REDIS_URL: ${REDIS_URL}
       INDEX_NAME: ${INDEX_NAME}
       LOGFLAG: ${LOGFLAG}
+      RETRIEVER_COMPONENT_NAME: "OPEA_RETRIEVER_REDIS"
     restart: unless-stopped
   tei-reranking-service:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
@@ -94,7 +95,7 @@ services:
     ports:
       - "8808:80"
     volumes:
-      - "./data:/data"
+      - "${MODEL_CACHE}:/data"
     shm_size: 1g
     environment:
       no_proxy: ${no_proxy}
